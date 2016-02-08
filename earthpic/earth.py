@@ -23,13 +23,14 @@ logger = logging.getLogger(__name__)
 s = sched.scheduler(time.time, time.sleep)
 
 
-def scheduled(earth_photo, sc):
-    now = datetime.now(pytz.utc)
-    print(now)
-    pic = earth_photo.fetch_one(now - timedelta(minutes=20))
-    if pic:
+def scheduled(earth_photo, date, make_walpaper, sc):
+    logger.info('downloading photo from {}'.format(date))
+    pic = earth_photo.fetch_one(date)
+    if pic and make_walpaper:
         set_wallpaper(pic)
-    sc.enter(600, 1, scheduled, (earth_photo, sc))
+    date += timedelta(seconds=600)
+    logger.info('Next photo will be downloaded after 10 minutes. ({})'.format(date))
+    sc.enter(600, 1, scheduled, (earth_photo, date, make_walpaper, sc))
 
 
 start_time = datetime.now(pytz.utc) - timedelta(minutes=20)
@@ -81,18 +82,32 @@ parser.add_argument(
     action='store_true',
     help=argparse.SUPPRESS,
 )
+parser.add_argument(
+    '--last',
+    type=int,
+    metavar='N_PHOTOS',
+    default=1,
+    help='process N photos to given date'
+)
+parser.add_argument(
+    '-b',
+    '--batch',
+    help='run batch downloading photos. To stop, press ctrl+c.',
+    action='store_true',
+)
 
 
 def main():
     args = parser.parse_args()
 
-    if args.verbose:
-        logging.getLogger().addHandler(info_console_handler)
     if args.debug:
         logging.getLogger().addHandler(debug_console_handler)
+    elif args.verbose:
+        logging.getLogger().addHandler(info_console_handler)
 
     logger.debug(args)
 
+    # Downloading big images needs confirmation
     if args.scale > 4:
         answer = input(
             'Are you sure you want to download photo of that size '
@@ -101,6 +116,7 @@ def main():
         )
         if answer.lower() in ('n', 'no'):
             return
+
     earth_photo = EarthPhoto(args.scale)
 
     date_string = '{} {}'.format(args.date, args.time)
@@ -112,17 +128,21 @@ def main():
     logger.debug('      date: {}'.format(date))
     logger.debug('start_date: {}'.format(start_time))
 
-    image_path = earth_photo.fetch_one(date)
-    logger.debug('image_path: {}'.format(image_path))
-    if args.wallpaper:
-        set_wallpaper(image_path)
+    if args.batch:
+        if args.last > 1:
+            print("Don't use batch option when defining last N option")
+            return
+        s.enter(1, 1, scheduled, (earth_photo, date, args.wallpaper, s))
+        try:
+            s.run()
+        except KeyboardInterrupt:
+            return
 
-        # s.enter(1, 1, scheduled, (earth_photo, s))
-        # s.run()
-
-        # pic = earth_photo.fetch_one()
-        # set_wallpaper(pic)
-        # earth_photo.fetch_many(datetime.now(pytz.utc) - timedelta(hours=12))
+    for delta in range(args.last, 0, -1):
+        image_path = earth_photo.fetch_one(date - timedelta(minutes=10*delta))
+        logger.debug('image_path: {}'.format(image_path))
+        if args.wallpaper and image_path:
+            set_wallpaper(image_path)
 
 
 if __name__ == "__main__":
