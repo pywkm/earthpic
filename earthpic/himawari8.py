@@ -4,20 +4,19 @@ docstring
 """
 
 import itertools
-import os
+import logging
 import shutil
-from datetime import datetime, timedelta
+from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
 
-import pytz
 import requests
 from PIL import Image
 
-from .utils import round_time
 from .constants import CWD
+from .utils import round_time
 
-# cwd = os.path.dirname(os.path.abspath(__file__))
+logger = logging.getLogger(__name__)
 
 
 class EarthPhoto:
@@ -30,9 +29,9 @@ class EarthPhoto:
     )
     tsize = 550
     sizes = {
-        1: 'xxs',
-        2: 'xs',
-        4: 'small',
+        1: 'xs',
+        2: 'small',
+        4: 'big',
         8: 'large',
         16: 'xl',
         20: 'xxl',
@@ -44,12 +43,12 @@ class EarthPhoto:
             self._images_path = Path(storage_path)
         else:
             self._images_path = Path(CWD).parent / 'images'
-        self._no_img_path = Path(CWD).parent / 'bin' / 'no_image_tile.png'
-        self._sess = requests.Session()
+        self._blank_image_path = Path(CWD).parent / 'bin' / 'blank_image.png'
+        self._prepare_files()
+        self._blank_image = Image.open(self._blank_image_path)
+        self._session = requests.Session()
         self.scale = scale
         self.time = round_time() - timedelta(minutes=self.delay)
-        self._setup()
-        self._no_image = Image.open(self._no_img_path)
 
     @property
     def scale(self):
@@ -71,43 +70,50 @@ class EarthPhoto:
     def time(self, value):
         self._time = round_time(value)
 
-    def _setup(self):
+    def _prepare_files(self):
         if not self._images_path.exists():
             Path.mkdir(self._images_path)
 
-        if not self._no_img_path.exists():
-            near_future = datetime.now() + timedelta(hours=1)
-            time = round_time(near_future)
-            url = self._get_url(time, scale=1)
-            response = requests.get(url, stream=True)
-            if response.status_code == 200:
-                with open(str(self._no_img_path), 'wb') as fout:
-                    shutil.copyfileobj(response.raw, fout)
-            del response
+        if not self._blank_image_path.exists():
+            self._create_blank_image()
+
+    def _create_blank_image(self):
+        near_future = round_time() + timedelta(hours=1)
+        url = self._get_url(near_future, scale=1)
+        response = requests.get(url, stream=True)
+        if response.status_code == 200:
+            with open(str(self._blank_image_path), 'wb') as fout:
+                shutil.copyfileobj(response.raw, fout)
+        del response
 
     def fetch_one(self, time=None, scale=None):
         if time:
             self.time = time
         if scale:
             self.scale = scale
+
         fpath = self._get_file_path()
         if fpath.exists():
-            print('Image already downloaded')
+            logger.info('Image already downloaded')
+
             return str(fpath)
 
-        png = Image.new('RGB',
-                        (self.tsize * self.scale, self.tsize * self.scale))
+        self._save_image(fpath)
 
+    def _save_image(self, fpath):
+        png = Image.new(
+            'RGB',
+            (self.tsize * self.scale, self.tsize * self.scale),
+        )
         for x, y in itertools.product(range(self.scale), range(self.scale)):
             tiledata = self._download_tile(x, y)
             tile = Image.open(BytesIO(tiledata))
-            if tile == self._no_image:
-                print('No Earth image at given time. File not saved.')
+            if tile == self._blank_image:
+                logger.info('No Earth image at given time. File not saved.')
                 return
             png.paste(tile, (self.tsize * x, self.tsize * y))
-
         png.save(str(fpath), 'PNG')
-        print('Image saved as:\n{}'.format(fpath))
+        logger.info('Image saved as: {}'.format(fpath))
         return str(fpath)
 
     def fetch_many(self, start_time, end_time=None, scale=2):
@@ -122,11 +128,11 @@ class EarthPhoto:
 
     def _download_tile(self, x, y):
         path = self._get_url(x=x, y=y)
-        print("fetching {}".format(path))
+        logger.info("Fetching tile: {}".format(path))
         try:
-            return self._sess.get(path).content
+            return self._session.get(path).content
         except requests.ConnectionError:
-            print('Connection Error. Retrying.')
+            logger.info('Connection Error. Retrying.')
             return self._download_tile(x, y)
 
     def _params(self, time=None, scale=None):
@@ -153,16 +159,3 @@ class EarthPhoto:
             **self._params(),
             size=self.sizes[self.scale],
         )
-
-
-def main():
-    earth_photo = EarthPhoto()
-    # earth_photo.fetch_one(datetime.now(pytz.utc)-timedelta(hours=24))
-    # earth_photo.fetch_one(datetime.now(pytz.utc)-timedelta(minutes=30), scale=8)
-    # earth_photo.fetch_one(datetime(2016, 2, 5, 2, 50), scale=20)
-    # earth_photo.fetch_one()
-    earth_photo.fetch_many(datetime.now(pytz.utc) - timedelta(hours=12))
-
-
-if __name__ == '__main__':
-    main()

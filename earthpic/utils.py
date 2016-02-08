@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-docstring
+Usefull utilities
 """
 import ctypes
-# import os
+import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from PIL import Image
@@ -12,11 +12,26 @@ import pytz
 
 from .constants import CWD
 
-cwd = CWD  # os.path.dirname(os.path.abspath(__file__))
+# logging object:
+logger = logging.getLogger(__name__)
 
+# create console handlers and set levels
+info_console_handler = logging.StreamHandler()
+info_console_handler.setLevel(logging.INFO)
+debug_console_handler = logging.StreamHandler()
+debug_console_handler.setLevel(logging.DEBUG)
 
+# create formatters
+formatter = logging.Formatter('%(levelname)s: %(message)s')
+formatter2 = logging.Formatter('%(name)18s: (%(levelname)s) %(message)s')
+
+# add formatters
+info_console_handler.setFormatter(formatter)
+debug_console_handler.setFormatter(formatter2)
+
+# WinAPI constants
 SPI_SETDESKWALLPAPER = 20  # 0x14
-SPIF_UPDATEINIFILE = 3  # 0x1
+SPIF_UPDATEINIFILE = 3
 
 
 def round_time(dtime=None, round_to=600):
@@ -25,20 +40,15 @@ def round_time(dtime=None, round_to=600):
     @param dtime: datetime object or None. If None, returns rounded current time
     @param round_to: time laps in seconds (default: 600s = 10min)
     """
-    # print(dtime)
     tz = pytz.utc
     if dtime is None:
         dtime = datetime.now(tz)
-    # print(dtime)
+    logger.debug(dtime)
     if not dtime.tzinfo:
         dtime = tz.localize(dtime)
-    # print(dtime)
-    # if (dtime.minute*60 + dtime.second) % round_to == 0:
-    #     print(dtime.second)
-    #     return dtime - timedelta(microseconds=-dtime.microsecond)
     seconds = (dtime - datetime(1970, 1, 1, tzinfo=tz)).seconds
     rounding = (seconds // round_to) * round_to
-    # print(seconds, rounding)
+    logger.debug('{} {}'.format(seconds, rounding))
     return dtime + timedelta(0, rounding - seconds, -dtime.microsecond)
 
 
@@ -49,7 +59,7 @@ def set_wallpaper(file_path):
     print('setting wallpaper:', temp_file)
     ctypes.windll.user32.SystemParametersInfoW(
         SPI_SETDESKWALLPAPER,
-        1,
+        0,
         temp_file,
         SPIF_UPDATEINIFILE,
     )

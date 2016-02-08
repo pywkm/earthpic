@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-docstring
+Main console script
 """
 
 import argparse
+import logging
 import sched
 import time
 from datetime import datetime, timedelta
@@ -11,7 +12,13 @@ from datetime import datetime, timedelta
 import pytz
 
 from earthpic.himawari8 import EarthPhoto
-from earthpic.utils import set_wallpaper
+from earthpic.utils import (
+    set_wallpaper,
+    info_console_handler,
+    debug_console_handler,
+)
+
+logger = logging.getLogger(__name__)
 
 s = sched.scheduler(time.time, time.sleep)
 
@@ -25,9 +32,9 @@ def scheduled(earth_photo, sc):
     sc.enter(600, 1, scheduled, (earth_photo, sc))
 
 
-invoke_datetime = datetime.now(pytz.utc) - timedelta(minutes=20)
-default_date = invoke_datetime.strftime('%Y-%m-%d')
-default_time = invoke_datetime.strftime('%H:%M')
+start_time = datetime.now(pytz.utc) - timedelta(minutes=20)
+default_date = start_time.strftime('%Y-%m-%d')
+default_time = start_time.strftime('%H:%M')
 
 parser = argparse.ArgumentParser(
     prog='earthpic',
@@ -69,16 +76,27 @@ parser.add_argument(
     help='increase output verbosity',
     action='store_true',
 )
+parser.add_argument(
+    '--debug',
+    action='store_true',
+    help=argparse.SUPPRESS,
+)
 
 
 def main():
     args = parser.parse_args()
-    print(args)
+
+    if args.verbose:
+        logging.getLogger().addHandler(info_console_handler)
+    if args.debug:
+        logging.getLogger().addHandler(debug_console_handler)
+
+    logger.debug(args)
 
     if args.scale > 4:
         answer = input(
             'Are you sure you want to download photo of that size '
-            '({0}x{0}={1} tiles)?'.format(args.scale, args.scale**2) +
+            '({0}x{0}={1} tiles)?'.format(args.scale, args.scale ** 2) +
             ' [Y/n] '
         )
         if answer.lower() in ('n', 'no'):
@@ -88,21 +106,22 @@ def main():
     date_string = '{} {}'.format(args.date, args.time)
     date = datetime.strptime(date_string, '%Y-%m-%d %H:%M')
     date = pytz.utc.localize(date)
-    if date > invoke_datetime:
-        date = invoke_datetime
-    # print(date)
-    # print(invoke_datetime)
+    if date > start_time:
+        date = start_time
+
+    logger.debug(date)
+    logger.debug(start_time)
+
     image_path = earth_photo.fetch_one(date)
     if args.wallpaper:
         set_wallpaper(image_path)
 
-    # s.enter(1, 1, scheduled, (earth_photo, s))
-    # s.run()
+        # s.enter(1, 1, scheduled, (earth_photo, s))
+        # s.run()
 
-    # pic = earth_photo.fetch_one()
-    # pic = r'e:\Dokumenty\ Zdjęcia + obrazki\Zdjęcie pantomograficzne - Matuszewski Wiktor.bmp'
-    # set_wallpaper(pic)
-    # earth_photo.fetch_many(datetime.now(pytz.utc) - timedelta(hours=12))
+        # pic = earth_photo.fetch_one()
+        # set_wallpaper(pic)
+        # earth_photo.fetch_many(datetime.now(pytz.utc) - timedelta(hours=12))
 
 
 if __name__ == "__main__":
