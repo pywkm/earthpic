@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Main console script
+Main console script. Call with '-h' argument for help.
 """
 
 import argparse
@@ -14,24 +14,12 @@ import pytz
 from earthpic.himawari8 import EarthPhoto
 from earthpic.utils import (
     set_wallpaper,
+    scheduled_downloading,
     info_console_handler,
     debug_console_handler,
 )
 
 logger = logging.getLogger(__name__)
-
-s = sched.scheduler(time.time, time.sleep)
-
-
-def scheduled(earth_photo, date, make_walpaper, sc):
-    logger.info('downloading photo from {}'.format(date))
-    pic = earth_photo.fetch_one(date)
-    if pic and make_walpaper:
-        set_wallpaper(pic)
-    date += timedelta(seconds=600)
-    logger.info('Next photo will be downloaded after 10 minutes. ({})'.format(date))
-    sc.enter(600, 1, scheduled, (earth_photo, date, make_walpaper, sc))
-
 
 start_time = datetime.now(pytz.utc) - timedelta(minutes=20)
 default_date = start_time.strftime('%Y-%m-%d')
@@ -130,16 +118,22 @@ def main():
 
     if args.batch:
         if args.last > 1:
-            print("Don't use batch option when defining last N option")
+            print("Don't use batch option when defining '--last N' option")
             return
-        s.enter(1, 1, scheduled, (earth_photo, date, args.wallpaper, s))
+        scheduler = sched.scheduler(time.time, time.sleep)
+        scheduler.enter(
+            0,  # 0s ie. instant execution
+            1,
+            scheduled_downloading,
+            (earth_photo, date, args.wallpaper, scheduler),
+        )
         try:
-            s.run()
+            scheduler.run()
         except KeyboardInterrupt:
             return
 
     for delta in range(args.last, 0, -1):
-        image_path = earth_photo.fetch_one(date - timedelta(minutes=10*delta))
+        image_path = earth_photo.download(date - timedelta(minutes=10 * delta))
         logger.debug('image_path: {}'.format(image_path))
         if args.wallpaper and image_path:
             set_wallpaper(image_path)
