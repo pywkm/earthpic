@@ -41,22 +41,26 @@ def round_time(dtime=None, round_to=600):
     @param round_to: time laps in seconds (default: 600s = 10min)
     """
     tz = pytz.utc
+    logger.debug('In round_time (dtime 1): {}'.format(dtime))
     if dtime is None:
         dtime = datetime.now(tz)
-    logger.debug(dtime)
+    logger.debug('In round_time (dtime 2): {}'.format(dtime))
     if not dtime.tzinfo:
         dtime = tz.localize(dtime)
+    logger.debug('In round_time (dtime 3): {}'.format(dtime))
     seconds = (dtime - datetime(1970, 1, 1, tzinfo=tz)).seconds
     rounding = (seconds // round_to) * round_to
-    logger.debug('{} {}'.format(seconds, rounding))
-    return dtime + timedelta(0, rounding - seconds, -dtime.microsecond)
+    logger.debug('seconds: {} rounding: {}'.format(seconds, rounding))
+    dtime = dtime + timedelta(0, rounding - seconds, -dtime.microsecond)
+    logger.debug('In round_time (dtime 4): {}'.format(dtime))
+    return dtime
 
 
 def set_wallpaper(file_path):
     temp_file = str(Path(CWD).parent / 'bin' / 'wallpaper.bmp')
     im = Image.open(file_path)
     im.save(temp_file)
-    print('setting wallpaper:', temp_file)
+    logger.info('Setting wallpaper: {}'.format(temp_file))
     ctypes.windll.user32.SystemParametersInfoW(
         SPI_SETDESKWALLPAPER,
         0,

@@ -109,10 +109,11 @@ def main():
     if date > start_time:
         date = start_time
 
-    logger.debug(date)
-    logger.debug(start_time)
+    logger.debug('      date: {}'.format(date))
+    logger.debug('start_date: {}'.format(start_time))
 
     image_path = earth_photo.fetch_one(date)
+    logger.debug('image_path: {}'.format(image_path))
     if args.wallpaper:
         set_wallpaper(image_path)
 

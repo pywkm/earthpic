@@ -98,7 +98,7 @@ class EarthPhoto:
 
             return str(fpath)
 
-        self._save_image(fpath)
+        return self._save_image(fpath)
 
     def _save_image(self, fpath):
         png = Image.new(
@@ -128,7 +128,7 @@ class EarthPhoto:
 
     def _download_tile(self, x, y):
         path = self._get_url(x=x, y=y)
-        logger.info("Fetching tile: {}".format(path))
+        logger.info("Fetching tile: {}...{}".format(path[:28], path[-26:]))
         try:
             return self._session.get(path).content
         except requests.ConnectionError:
