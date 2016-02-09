@@ -20,7 +20,7 @@ setup(
             'earthpic = earthpic.earth:main',
         ],
     },
-    requires=['pytz', 'requests', 'Pillow', 'click'],
+    install_requires=['pytz', 'requests', 'Pillow', 'click'],
     platforms=['Windows'],
     classifiers=[
         'Topic :: Multimedia :: Graphics',
