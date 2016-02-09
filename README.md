@@ -60,3 +60,14 @@ Call `earthpic --help` from command line to view this help:
                             (default: False)
       -p PATH, --path PATH  path where images will be saved (default: images)
 
+
+
+So, for instance calling just `earthpic` without arguments will download latest
+satelite photo (current time minus ~20 minutes - delay of original service) and
+save it to `./images/` directory, without setting it as image.
+
+To specify date and time of picture write: `earthpic -d 2016-01-01 -t 14:40`.
+
+To set downloaded picture as wallpaper write: `earthpic -w -d 2016-01-01 -t 14:40`.
+
+To change scale (size, quality of wallpaper): `earthpic -w -s 4 -d 2016-01-01 -t 14:40`.
