@@ -51,7 +51,7 @@ class EarthPhoto:
         if storage_path:
             self._images_path = Path(storage_path)
         else:
-            self._images_path = Path(CWD).parent / 'images'
+            self._images_path = Path.cwd() / 'images'
         self._blank_image_path = Path(CWD).parent / 'bin' / 'blank_image.png'
         self._prepare_files()
         self._blank_image = Image.open(self._blank_image_path)
@@ -87,6 +87,7 @@ class EarthPhoto:
             Path.mkdir(self._images_path)
 
         if not self._blank_image_path.exists():
+            Path.mkdir(self._blank_image_path.parent)
             self._create_blank_image()
 
     def _create_blank_image(self):
@@ -164,13 +165,13 @@ class EarthPhoto:
 
     def _get_url(self, time=None, scale=None, x=0, y=0):
         return self.url_pattern.format(
-            **self._params(time, scale),
             x=x,
             y=y,
+            **self._params(time, scale)
         )
 
     def _get_file_path(self):
         return self._images_path / self.filename_pattern.format(
-            **self._params(),
             size=self.sizes[self.scale],
+            **self._params()
         )

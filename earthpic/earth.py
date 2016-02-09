@@ -10,6 +10,7 @@ import time
 from datetime import datetime, timedelta
 
 import pytz
+from pathlib import Path
 
 from earthpic.himawari8 import EarthPhoto
 from earthpic.utils import (
@@ -32,21 +33,21 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument(
     '-d',
-    dest='date',
+    '--date',
     metavar='DATE',
     default=default_date,
     help='date of the photo [format: YYYY-MM-DD]',
 )
 parser.add_argument(
     '-t',
-    dest='time',
+    '--time',
     metavar='TIME',
     default=default_time,
     help='time of the photo [fotmat: hh:mm]',
 )
 parser.add_argument(
     '-s',
-    dest='scale',
+    '--scale',
     type=int,
     metavar='SCALE',
     choices=(1, 2, 4, 8, 16, 20),
@@ -71,6 +72,7 @@ parser.add_argument(
     help=argparse.SUPPRESS,
 )
 parser.add_argument(
+    '-l',
     '--last',
     type=int,
     metavar='N_PHOTOS',
@@ -82,6 +84,14 @@ parser.add_argument(
     '--batch',
     help='run batch downloading photos. To stop, press ctrl+c.',
     action='store_true',
+)
+default_path = str(Path('.') / 'images')
+parser.add_argument(
+    '-p',
+    '--path',
+    metavar='PATH',
+    default=default_path,
+    help='path where images will be saved',
 )
 
 
@@ -105,7 +115,7 @@ def main():
         if answer.lower() in ('n', 'no'):
             return
 
-    earth_photo = EarthPhoto(args.scale)
+    earth_photo = EarthPhoto(args.scale, args.path)
 
     date_string = '{} {}'.format(args.date, args.time)
     date = datetime.strptime(date_string, '%Y-%m-%d %H:%M')
@@ -132,7 +142,7 @@ def main():
         except KeyboardInterrupt:
             return
 
-    for delta in range(args.last, 0, -1):
+    for delta in range(args.last-1, -1, -1):
         image_path = earth_photo.download(date - timedelta(minutes=10 * delta))
         logger.debug('image_path: {}'.format(image_path))
         if args.wallpaper and image_path:
