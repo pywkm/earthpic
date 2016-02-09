@@ -17,6 +17,7 @@ and by willwhitney: https://gist.github.com/willwhitney/e9e2c42885385c51843e
 This script is Windows specific. Python 3.4+ only compatible.
 Tested on Windows 7, Python 3.4.4 and Python 3.5.1
 
+
 Installation
 ------------
 To install, download source or clone it with git
@@ -30,9 +31,12 @@ Change to eartpic/ directory and run setup.py
     python setup.py install
 
 
-If you have problem with installing Pillow package with `pip install pillow`
-you can download wheel file from http://www.lfd.uci.edu/~gohlke/pythonlibs/
-and install it with command `pip install <path/to/whl_file>`
+This should install all dependencies (`Pillow`, `requests`, `pytz` and `click`).
+If you have problem with installing Pillow package during `python setup.py install`
+and/or with `pip install pillow`, you can download wheel file from
+http://www.lfd.uci.edu/~gohlke/pythonlibs/ and install it with command
+`pip install <path/to/whl_file>`.
+
 
 Usage
 -----
@@ -61,13 +65,13 @@ Call `earthpic --help` from command line to view this help:
       -p PATH, --path PATH  path where images will be saved (default: images)
 
 
-
 So, for instance calling just `earthpic` without arguments will download latest
 satelite photo (current time minus ~20 minutes - delay of original service) and
-save it to `./images/` directory, without setting it as image.
+save it to `./images/` directory, without setting it as desktop wallpaper.
 
-To specify date and time of picture write: `earthpic -d 2016-01-01 -t 14:40`.
+To specify date and time of picture write: `earthpic -d 2016-02-01 -t 02:50`.
+All dates/times are considered as in UTC timezone.
 
-To set downloaded picture as wallpaper write: `earthpic -w -d 2016-01-01 -t 14:40`.
+To set downloaded picture as wallpaper, write: `earthpic -w -d 2016-02-01 -t 02:50`.
 
-To change scale (size, quality of wallpaper): `earthpic -w -s 4 -d 2016-01-01 -t 14:40`.
+To change scale (size, quality of wallpaper): `earthpic -w -s 4 -d 2016-02-01 -t 02:50`.
