@@ -1,5 +1,8 @@
+earthpic
+========
+
 Python script downloading Earth photos taken by Himawari-8 satelite.
-            Website: http://himawari8.nict.go.jp/
+Website: http://himawari8.nict.go.jp/
 
 Inspired by this reddit thread:
 https://www.reddit.com/r/programming/comments/441do9/i_made_a_windows_powershell_script_that_puts_a/
@@ -8,8 +11,8 @@ Especially by european_impostor's Powershell script:
 https://gist.github.com/MichaelPote/92fa6e65eacf26219022
 
 And most of all, its Python implementations:
-celoyd's: https://gist.github.com/celoyd/39c53f824daef7d363db
-willwhitney's: https://gist.github.com/willwhitney/e9e2c42885385c51843e
+by celoyd: https://gist.github.com/celoyd/39c53f824daef7d363db
+and by willwhitney: https://gist.github.com/willwhitney/e9e2c42885385c51843e
 
 This script is Windows specific. Python 3.4+ only compatible.
 Tested on Windows 7, Python 3.4.4 and Python 3.5.1
