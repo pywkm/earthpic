@@ -2,6 +2,8 @@ import runpy
 
 from setuptools import setup
 
+long_description = open('README.md').read()
+
 setup(
     name='earthpic',
     version=runpy.run_path('earthpic/__init__.py')['__version__'],
@@ -11,10 +13,7 @@ setup(
     author='Wiktor Matuszewski',
     author_email='pywkm@wukaem.pl',
     description='Earth photos downloader',
-    long_description=(
-        'Command line program to download Earth photos from\n'
-        'http://himawari8.nict.go.jp website.'
-    ),
+    long_description=long_description,
     entry_points={
         'console_scripts': [
             'earthpic = earthpic.earth:main',
@@ -32,7 +31,7 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3 :: Only',
     ],

@@ -139,7 +139,7 @@ class EarthPhoto:
             png_image.paste(tile, (self.tile_size * x, self.tile_size * y))
 
         png_image.save(str(file_path), 'PNG')
-        logger.info('Image saved as: {}'.format(file_path))
+        print('Image saved as: {}'.format(file_path))
         return str(file_path)
 
     def _download_tile(self, x, y):
